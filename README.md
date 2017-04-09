@@ -4,8 +4,6 @@ Fantasy RPG weather generator.
 
 ## Getting started
 
-`npm install --save scribe-rpg-weather-generator`
-
 ## Features
 
 ## Documentation
