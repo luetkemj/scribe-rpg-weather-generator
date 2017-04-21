@@ -1,26 +1,14 @@
-import * as _ from 'lodash';
+import { each, orderBy, isUndefined, assign, random, inRange } from 'lodash';
 import { generateWind } from './generators';
 import { beaufortScale, feelsLikeNotes } from './dictionary';
 
-export function d6() {
-  return _.random(1, 6);
-}
-
-export function d10() {
-  return _.random(1, 10);
-}
-
-export function d30() {
-  return _.random(1, 30);
-}
-
 // convert minutes to milliseconds
-export function toMs(minutes) {
+export function minutesToMs(minutes) {
   return minutes * 60000;
 }
 
 // alternates pushing and shifting elements from candidate onto new array.
-// Example: [5,4,3,2,1] > [1,3,5,4,2]
+// Example: [5,4,3,2,1] => [1,3,5,4,2]
 export function shimmy(array) {
   const newArray = [];
 
@@ -36,7 +24,8 @@ export function shimmy(array) {
 }
 
 /**
- * Add time proprty to each item in array incrementing each by one hour in milliseconds
+ * Add time property to each item in array incrementing each by one hour in milliseconds
+ * starting at initialMs
  * @param  {array}  array     [description]
  * @param  {number} initialMs [time to begin incrementing from in milliseconds]
  * @return {array}            [new array]
@@ -100,15 +89,15 @@ export function trackStorm(storm, stormStartTime) {
  */
 export function backFill(array, properties) {
   const newArray = [];
-  _.each(array, (record, index) => {
+  each(array, (record, index) => {
     const tempObject = {};
-    _.each(properties, (property) => {
-      if (_.isUndefined(record[property])) {
+    each(properties, (property) => {
+      if (isUndefined(record[property])) {
         tempObject[property] = array[index - 1][property];
       }
     });
 
-    _.assign(record, tempObject);
+    assign(record, tempObject);
 
     return newArray.push({
       ...record,
@@ -119,7 +108,7 @@ export function backFill(array, properties) {
 
 /**
  * When a storm cells duration does not end before the next record begins we need to let the storm
- * cell condition overflow into the next record. This function accomplishes that goal.
+ * cell condition overflow into the next record.
  * @param  {array} array [Array of Objects that represents our record of hourly weather over a
  *                       24 hour period]
  * @return {array}       [New array]
@@ -151,7 +140,7 @@ export function stormOverFlow(array) {
 export function fillStormGaps(array) {
   const newArray = [];
 
-  _.each(array, (record, index) => {
+  each(array, (record, index) => {
     if (array[index + 1]) {
       const next = array[index + 1];
 
@@ -165,7 +154,7 @@ export function fillStormGaps(array) {
     }
   });
 
-  return _.orderBy(array.concat(newArray), 'time');
+  return orderBy(array.concat(newArray), 'time');
 }
 
 /**
@@ -192,21 +181,17 @@ export function topOff(array) {
  * @return {number}        Whipped wind speed
  */
 export function whipWind(wind) {
-  const whip = d10();
+  const whip = random(1, 10);
 
-  if (_.inRange(whip, 0, 7)) {
+  if (inRange(whip, 0, 7)) {
     return wind;
   }
 
-  if (_.inRange(whip, 7, 10)) {
+  if (inRange(whip, 7, 10)) {
     return wind * 2;
   }
 
-  if (whip === 10) {
-    return wind * 3;
-  }
-
-  return wind;
+  return wind * 3;
 }
 
 /**
@@ -217,7 +202,7 @@ export function whipWind(wind) {
  */
 export function addWind(array, average) {
   const newArray = [];
-  _.each(array, (record) => {
+  each(array, (record) => {
     if (!record.wind) {
       const wind = generateWind(average);
       newArray.push({
@@ -302,7 +287,7 @@ export function getWindChill(T, V) {
  */
 export function feelsLike(array) {
   const newArray = [];
-  _.each(array, (record) => {
+  each(array, (record) => {
     if (record.temp > 79 && record.rh > 39) {
       return newArray.push({
         ...record,
