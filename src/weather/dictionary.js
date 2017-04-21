@@ -45,11 +45,7 @@ export function temporalEstimation(milliseconds) {
     return 'night';
   }
 
-  if (_.inRange(hours, 23.75, 24)) {
-    return 'midnight';
-  }
-
-  return 'sometime today';
+  return 'midnight';
 }
 
 export function beaufortScale(wind) {
@@ -89,10 +85,8 @@ export function beaufortScale(wind) {
   if (_.inRange(wind, 64, 73)) {
     return BEAUFORT_SCALE[11];
   }
-  if (_.inRange(wind, 73, 10000)) {
-    return BEAUFORT_SCALE[12];
-  }
-  return null;
+
+  return BEAUFORT_SCALE[12];
 }
 
 export function feelsLikeNotes(T) {
