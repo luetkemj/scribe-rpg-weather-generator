@@ -1,3 +1,1 @@
-const weatherGenerator = {};
-
-module.exports = weatherGenerator;
+export { generateWeather } from '../src/weather/weather.controller';

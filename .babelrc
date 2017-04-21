@@ -1,4 +1,4 @@
 {
-  "presets": ["env", "stage-3"],
+  "presets": ["env", "stage-1"],
   "plugins": ["transform-strict-mode"]
 }

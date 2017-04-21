@@ -1,10 +1,10 @@
 import * as _ from 'lodash';
-import { d6, d10, d30, toMs, whipWind } from './utils';
+import { minutesToMs, whipWind } from './utils';
 import { getPrecipSize } from './dictionary';
 import { NS_CELL_TABLE, S_CELL_TABLE } from './weather.constants';
 
-function generateStormCell(table, duration, roll = d30, modifier = 0) {
-  const { precip, wind, solid, hook } = table[roll() + modifier];
+export function generateStormCell(table, duration, roll, modifier = 0) {
+  const { precip, wind, solid, hook } = table[roll + modifier];
 
   const whippedWind = whipWind(wind);
 
@@ -18,33 +18,33 @@ function generateStormCell(table, duration, roll = d30, modifier = 0) {
 }
 
 function generateSingleCell() {
-  const duration = toMs(d10() + 20);
+  const duration = minutesToMs(_.random(1, 10) + 20);
   return {
     duration,
-    cells: [generateStormCell(NS_CELL_TABLE, duration)],
+    cells: [generateStormCell(NS_CELL_TABLE, duration, _.random(1, 30))],
   };
 }
 
-function generateMultiCell(table, cluster) {
+function generateMultiCell(table, cluster, d6, d10) {
   const cells = [];
   let totalDuration = 0;
 
-  for (let i = 0; i < d6() + 2; i += 1) {
+  for (let i = 0; i < d6 + 2; i += 1) {
     let delay = 0;
     if (cluster) {
-      delay = Math.ceil(d30() / 2);
-      totalDuration += toMs(delay);
+      delay = Math.ceil(_.random(1, 30) / 2);
+      totalDuration += minutesToMs(delay);
     }
 
-    const duration = toMs(d10() + 20);
+    const duration = minutesToMs(d10 + 20);
     totalDuration += duration;
 
-    const cell = generateStormCell(table, duration);
+    const cell = generateStormCell(table, duration, _.random(1, 30));
 
     cells.push({
       ...cell,
       cell_duration: duration,
-      cell_delay: toMs(delay),
+      cell_delay: minutesToMs(delay),
     });
   }
   return {
@@ -57,12 +57,12 @@ function generateMultiCell(table, cluster) {
  * @TODO: test this bugger CAUSE IT DON'T WORK!!
  */
 function generateSuperCell() {
-  const duration = 60 + (d30() * 10);
+  const duration = 60 + (_.random(1, 30) * 10);
   const cells = [];
 
   for (let i = 1; i <= duration / 10; i += 1) {
     if (i === 1 || i === duration / 10) {
-      const cell = generateStormCell(S_CELL_TABLE, toMs(10), d10);
+      const cell = generateStormCell(S_CELL_TABLE, minutesToMs(10), _.random(1, 10));
 
       cells.push({
         ...cell,
@@ -70,7 +70,7 @@ function generateSuperCell() {
     }
 
     if (i === 2) {
-      const cell = generateStormCell(S_CELL_TABLE, toMs(10), d10, 10);
+      const cell = generateStormCell(S_CELL_TABLE, minutesToMs(10), _.random(1, 10), 10);
 
       cells.push({
         ...cell,
@@ -78,7 +78,7 @@ function generateSuperCell() {
     }
 
     if (i > 2 && i < duration) {
-      const cell = generateStormCell(S_CELL_TABLE, toMs(10), d10, 20);
+      const cell = generateStormCell(S_CELL_TABLE, minutesToMs(10), _.random(1, 10), 20);
 
       cells.push({
         ...cell,
@@ -87,7 +87,7 @@ function generateSuperCell() {
   }
 
   return {
-    duration: toMs(duration),
+    duration: minutesToMs(duration),
     cells,
   };
 }
@@ -102,16 +102,16 @@ export function generateStorm(stormType) {
     storm = generateSingleCell();
   }
   if (stormType === 'multiCellClusterNS') {
-    storm = generateMultiCell(NS_CELL_TABLE, true);
+    storm = generateMultiCell(NS_CELL_TABLE, true, _.random(1, 6), _.random(1, 10));
   }
   if (stormType === 'multiCellClusterS') {
-    storm = generateMultiCell(S_CELL_TABLE, true);
+    storm = generateMultiCell(S_CELL_TABLE, true, _.random(1, 6), _.random(1, 10));
   }
   if (stormType === 'multiCellLineNS') {
-    storm = generateMultiCell(NS_CELL_TABLE, false);
+    storm = generateMultiCell(NS_CELL_TABLE, false, _.random(1, 6), _.random(1, 10));
   }
   if (stormType === 'multiCellLineS') {
-    storm = generateMultiCell(S_CELL_TABLE, false);
+    storm = generateMultiCell(S_CELL_TABLE, false, _.random(1, 6), _.random(1, 10));
   }
   if (stormType === 'superCell') {
     storm = generateSuperCell();
@@ -192,11 +192,11 @@ export function generateNextSky(sky) {
 
   // current sky is sticky - so we try here to unstick it.
   // we have unstuck the sky
-  if (d30() > 10) {
+  if (_.random(1, 30) > 10) {
     // check which way to lean
     // first we get the index of sky in SKIES
     let index = SKIES.indexOf(sky);
-    if (d30() % 2) {
+    if (_.random(1, 30) % 2) {
       // so we can move up or down
       index -= 1;
     } else {
@@ -229,7 +229,7 @@ export function generateStormConditions(hourlyWeather, season, stormType, stormS
       // try lightning and continue
       if (stormType === 'multiCellClusterNS' || stormType === 'multiCellLineNS' || stormType === 'singleCell') {
         if (record.time === stormStart) {
-          if (!d30() % 3) {
+          if (!_.random(1, 30) % 3) {
             newArray[newArray.length - 1].condition = 'lightning';
             newArray[newArray.length - 1].outlook = 'rolling thunder off in the distance';
           }
@@ -309,7 +309,7 @@ export function generateSkyConditions(hourlyWeather, stormType, terrain) {
         // if there is a severe storm today
         if (stormType === 'multiCellClusterS' || stormType === 'multiCellLineS') {
           // The day is more likely to be clear to partly-cloudy overall
-          if (d30() % 2) {
+          if (_.random(1, 30) % 2) {
             return newArray.push({
               ...record,
               condition: generateNextSky('clear'),
@@ -325,7 +325,7 @@ export function generateSkyConditions(hourlyWeather, stormType, terrain) {
         // if there is a non severe storm today
         if (stormType === 'multiCellClusterS' || stormType === 'multiCellClusterS') {
           // The day is more likely to be mostly-cloudy to overcast
-          if (d30() % 2) {
+          if (_.random(1, 30) % 2) {
             return newArray.push({
               ...record,
               condition: generateNextSky('mostly-cloudy'),
