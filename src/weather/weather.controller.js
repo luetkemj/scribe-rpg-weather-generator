@@ -1,6 +1,5 @@
 import * as _ from 'lodash';
 import {
-  d30,
   shimmy,
   assignTime,
   getStormWindow,
@@ -73,7 +72,7 @@ export function generateWeather(generator, zone, terrain, season, month, initial
 
   let stormType = null;
   if (weatherClass) {
-    const roll = d30();
+    const roll = _.random(1, 30);
     stormType = STORM_TYPE_TABLE[weatherClass][roll];
   }
 
